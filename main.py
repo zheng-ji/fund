@@ -7,15 +7,11 @@ import holidays
 BUY_RECORD = [
     {
         "code": "005242",
-        "recordList": {
+        "buyRecordList": {
             "2020-09-09": 2500,
             "2020-09-24": 2500,
         }
     }
-]
-
-SELL_RECORD = [
-
 ]
 
 ONE_DAY = datetime.timedelta(days=1)
@@ -57,14 +53,15 @@ class FundHistoryValue:
 
 
 class FundEstimatedValue:
-    def __init__(self, code, name, value, increasePercentage):
+    def __init__(self, code, name, value, increasePercentage, realValue):
         self.code = code
         self.name = name
-        self.value = value
-        self.increasePercentage = increasePercentage
+        self.value = float(value)
+        self.increasePercentage = float(increasePercentage)
+        self.realValue = float(realValue)
 
     def __str__(self):
-        return "代码: {0}, 名称: {1}, 净值估算: {2}, 估算涨幅: {3}%".format(self.code, self.name, self.value, self.increasePercentage)
+        return "代码: {0}, 名称: {1}, 净值估算: {2}, 估算涨幅: {3}%, 单位净值: {4}".format(self.code, self.name, self.value, self.increasePercentage, self.realValue)
 
 
 def getFundEstimatedValue(code):
@@ -76,7 +73,7 @@ def getFundEstimatedValue(code):
 
     for i in search:
         data = json.loads(i)
-        value = FundEstimatedValue(code, data['name'], data['gsz'], data['gszzl'])
+        value = FundEstimatedValue(code, data['name'], data['gsz'], data['gszzl'], data["dwjz"])
         return value
 
 
@@ -115,6 +112,7 @@ def getFundHistoryValue(code, name):
 
 def main():
     for record in BUY_RECORD:
+        print("---------------------------------------------------------------------")
         code = record["code"]
         estimatedValue = getFundEstimatedValue(code)
         print(estimatedValue)
@@ -122,18 +120,24 @@ def main():
 
         historyValue = getFundHistoryValue(code, estimatedValue.name)
 
-        print("购买记录:")
+        print("{}, 购买记录:".format(estimatedValue.name))
         canSellFundNums = 0.0
-        for buyDate, buyMoney in record["recordList"].items():
+        totalFundNum = 0.0
+        for buyDate, buyMoney in record["buyRecordList"].items():
             holdingDays = fundHoldingDays(buyDate)
             hisValue = historyValue.getValueByDate(buyDate)
             fundNum = round(buyMoney / hisValue, 2)
+            totalFundNum += fundNum
             print("日期: {}, 购买金额: {}, 确认份数: {}, 持有天数: {}, 确认净值: {}".format(buyDate, buyMoney, fundNum, holdingDays, hisValue))
             
             if holdingDays >= 30:
                 canSellFundNums += fundNum
 
         print("\n满 30 天可卖份数: {}".format(canSellFundNums))
-
+        currentMoney = round(totalFundNum * estimatedValue.realValue, 2)
+        estimateMoney = round(totalFundNum * estimatedValue.value, 2)
+        diff = round(estimateMoney - currentMoney, 2)
+        print("当前金额: {}, 今日估算盈亏: {}".format(currentMoney, diff))
+        print("---------------------------------------------------------------------\n")
 
 main()
