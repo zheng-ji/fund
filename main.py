@@ -19,14 +19,43 @@ BUY_RECORD = [
         "sellRecordList": {
             "2020-10-13": 1383,  # 卖出份数
         }
+    }, 
+    {
+        "code": "004966",
+        "buyRecordList": {
+            "2020-07-07": 3000,  # 买入金额
+            "2020-07-20": 1789,
+        }, 
+        "sellRecordList": {
+        }
+    }, 
+    {
+        "code": "008127",
+        "buyRecordList": {
+            "2020-07-21": 100,
+        }, 
+        "sellRecordList": {
+        }
+    }, 
+    {
+        "code": "009326",
+        "buyRecordList": {
+            "2020-07-07": 2000,
+            "2020-07-23": 500,
+            "2020-10-16": 1500,
+        }, 
+        "sellRecordList": {
+        }
     }
 ]
 
 def custom_strategy(declinePencent, estimatedValue):
+    #  回撤超过5%, 今日净值下跌超过1%
     if declinePencent >= 5 and estimatedValue.increasePercentage < -1:
         print("可以考虑加仓")
-    elif estimatedValue.increasePercentage > 1:
-        print("可卖出")
+    #  今日净值超过1%
+    elif declinePencent < 1 and estimatedValue.increasePercentage > 1:
+        print("可考虑卖出")
     else:
         print("观望, 投资需要耐心")
 
