@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
 import requests
 import re
 import json
@@ -6,16 +8,27 @@ import holidays
 
 BUY_RECORD = [
     {
-        "code": "005242",
+        "code": "005276",
         "buyRecordList": {
-            "2020-09-09": 2500,  # 买入金额
-            "2020-09-24": 2500,
+            "2020-06-18": 1000,  # 买入金额
+            "2020-06-23": 1850,
+            "2020-06-29": 500,
+            "2020-07-20": 1000,
+            "2020-09-08": 500,
         }, 
         "sellRecordList": {
-            "2020-10-21": 1000,  # 卖出份数
+            "2020-10-13": 1383,  # 卖出份数
         }
     }
 ]
+
+def custom_strategy(declinePencent, estimatedValue):
+    if declinePencent >= 5 and estimatedValue.increasePercentage < -1:
+        print("可以考虑加仓")
+    elif estimatedValue.increasePercentage > 1:
+        print("可卖出")
+    else:
+        print("观望, 投资需要耐心")
 
 ONE_DAY = datetime.timedelta(days=1)
 HOLIDAYS_US = holidays.US()
@@ -99,7 +112,7 @@ def getFundHistoryValue(code, name):
         'callback': 'jQuery18307633215694564663_1548321266367',
         'fundCode': code,
         'pageIndex': pageIndex,
-        'pageSize': 50,
+        'pageSize': 200,
     }
     # 存储cookie内容
     cookie = 'EMFUND1=null; EMFUND2=null; EMFUND3=null; EMFUND4=null; EMFUND5=null; EMFUND6=null; EMFUND7=null; EMFUND8=null; EMFUND0=null; EMFUND9=01-24 17:11:50@#$%u957F%u4FE1%u5229%u5E7F%u6DF7%u5408A@%23%24519961; st_pvi=27838598767214; st_si=11887649835514'
@@ -164,6 +177,7 @@ def main():
         increasePencent = round(100.0 * (estimatedValue.value - historyValue.getMinValue()) / historyValue.getMinValue(), 2)
         print("从最高点以来回撤: {}%, 从最低点以来涨幅: {}%".format(declinePencent, increasePencent))
         print("当前金额: {}, 今日估算盈亏: {}".format(currentMoney, diff))
+        custom_strategy(declinePencent, estimatedValue)
         print("---------------------------------------------------------------------\n")
 
 main()
