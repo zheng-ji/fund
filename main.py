@@ -8,8 +8,11 @@ BUY_RECORD = [
     {
         "code": "005242",
         "buyRecordList": {
-            "2020-09-09": 2500,
+            "2020-09-09": 2500,  # 买入金额
             "2020-09-24": 2500,
+        }, 
+        "sellRecordList": {
+            "2020-10-21": 1000,  # 卖出份数
         }
     }
 ]
@@ -40,7 +43,16 @@ class FundHistoryValue:
         self.historyValueMap[date] = value        
 
     def getValueByDate(self, date):
-        return self.historyValueMap[date]
+        if date in self.historyValueMap:
+            return self.historyValueMap[date]
+
+        return None
+
+    def getMaxValue(self):
+        return max(self.historyValueMap.values())
+
+    def getMinValue(self):
+        return min(self.historyValueMap.values())
 
     def __str__(self):
         strValue = "代码: {0}, 名称: {1}, 净值列表:[\n".format(self.code, self.name)
@@ -128,15 +140,29 @@ def main():
             hisValue = historyValue.getValueByDate(buyDate)
             fundNum = round(buyMoney / hisValue, 2)
             totalFundNum += fundNum
-            print("日期: {}, 购买金额: {}, 确认份数: {}, 持有天数: {}, 确认净值: {}".format(buyDate, buyMoney, fundNum, holdingDays, hisValue))
+            print("买入, 日期: {}, 购买金额: {}, 确认份数: {}, 持有天数: {}, 确认净值: {}".format(buyDate, buyMoney, fundNum, holdingDays, hisValue))
             
             if holdingDays >= 30:
                 canSellFundNums += fundNum
+
+        for sellDate, sellfundNum in record["sellRecordList"].items():
+            hisValue = historyValue.getValueByDate(sellDate)
+            totalFundNum -= sellfundNum
+            canSellFundNums = round(canSellFundNums - sellfundNum, 2)
+            
+            if hisValue is not None:
+                sellMoney = sellfundNum * hisValue
+                print("卖出, 日期: {}, 卖出金额: {}, 卖出份数: {}, 卖出净值: {}".format(sellDate, sellMoney, sellfundNum, hisValue))
+
 
         print("\n满 30 天可卖份数: {}".format(canSellFundNums))
         currentMoney = round(totalFundNum * estimatedValue.realValue, 2)
         estimateMoney = round(totalFundNum * estimatedValue.value, 2)
         diff = round(estimateMoney - currentMoney, 2)
+
+        declinePencent = round(100.0 * (historyValue.getMaxValue() - estimatedValue.value) / historyValue.getMaxValue(), 2)
+        increasePencent = round(100.0 * (estimatedValue.value - historyValue.getMinValue()) / historyValue.getMinValue(), 2)
+        print("从最高点以来回撤: {}%, 从最低点以来涨幅: {}%".format(declinePencent, increasePencent))
         print("当前金额: {}, 今日估算盈亏: {}".format(currentMoney, diff))
         print("---------------------------------------------------------------------\n")
 
